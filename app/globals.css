@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/*  TwinCaps — art-directed, white-first, editorial.                   */
+/*                                                                     */
+/*  80% warm ivory + white negative space, 15% deep warm ink /          */
+/*  champagne chrome / product imagery, ~5% a single electric mineral   */
+/*  blue accent. No dark panels, no neon, no heavy gradients.           */
+/*                                                                     */
+/*  Token NAMES are kept stable (night/coal/surface = backgrounds,      */
+/*  cream = primary ink, mist = muted) so the component library reads    */
+/*  its theme from one place. "night" is the lightest canvas, "cream"    */
+/*  the darkest ink — the palette is inverted, the semantics are not.    */
+/* ------------------------------------------------------------------ */
+@theme {
+  /* Canvas — warm ivory → milk-glass → warm paper for section rhythm */
+  --color-night: #faf8f3;
+  --color-coal: #f3efe7;
+  --color-surface: #ffffff;
+  --color-surface-2: #efe9dd;
+
+  /* Hairlines — soft warm graphite */
+  --color-line: rgba(28, 24, 18, 0.1);
+  --color-line-2: rgba(28, 24, 18, 0.18);
+
+  /* Ink — deep warm near-black → muted warm greys */
+  --color-cream: #161310;
+  --color-mist: #635e56;
+  --color-mist-2: #8a8478;
+
+  /* Champagne — deep gold (readable as text) → soft decorative chrome */
+  --color-champagne: #94712a;
+  --color-champagne-soft: #c8aa6e;
+  --color-champagne-deep: #6f551a;
+
+  /* Brushed metal */
+  --color-metal: #b8b1a6;
+
+  /* The single energetic accent — electric mineral blue (use 3–8%) */
+  --color-accent: #2f6bff;
+  --color-accent-deep: #1e4fd6;
+  --color-accent-soft: #eaf0ff;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, "Times New Roman",
+    serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-night);
+    color: var(--color-cream);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: #ffffff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Visual primitives — in the components layer so Tailwind utilities   */
+/*  (e.g. text-accent-deep on an .eyebrow) can still override colour.   */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+
+  /* Brushed-gold wordmark / chrome accents — tuned to read on warm white */
+  .metal-text {
+    background: linear-gradient(
+      180deg,
+      #b8943f 0%,
+      #8a6a1f 42%,
+      #6f551a 70%,
+      #a9853a 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Editorial eyebrow — tiny uppercase label with a leading hairline */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--color-champagne);
+  }
+
+  /* Oversized editorial index numeral (gallery-style section markers) */
+  .index-numeral {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    line-height: 0.8;
+    letter-spacing: -0.02em;
+    color: var(--color-cream);
+  }
+
+  /* Hairline section divider */
+  .rule-top {
+    border-top: 1px solid var(--color-line);
+  }
+
+  /* Hide scrollbars on horizontal premium scrollers */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Reduced motion — calm by default, fully still when requested       */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
