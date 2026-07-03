@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Check, Mail, Paperclip } from "lucide-react";
-import { CONTACT_EMAIL, CONTACT_EMAIL_HREF } from "@/lib/site";
+import { AlertCircle, Check, Loader2, Mail, Paperclip } from "lucide-react";
+import {
+  CONTACT_EMAIL,
+  CONTACT_EMAIL_HREF,
+  WEB3FORMS_ACCESS_KEY,
+  WEB3FORMS_ENDPOINT,
+} from "@/lib/site";
 
 const QUANTITIES = [
   "Sample",
@@ -24,13 +29,16 @@ const inputClass =
 const labelClass = "mb-2 block text-sm font-medium text-cream";
 const errorClass = "mt-1.5 text-xs text-[#b4231b]";
 
+type Status = "idle" | "submitting" | "success" | "error";
+
 export default function ContactForm() {
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const data = new FormData(form);
     const next: Record<string, string> = {};
 
     if (!String(data.get("name") || "").trim()) next.name = "Please add your name.";
@@ -42,15 +50,29 @@ export default function ContactForm() {
       next.email = "Please enter a valid email address.";
 
     setErrors(next);
+    if (Object.keys(next).length > 0) return;
 
-    if (Object.keys(next).length === 0) {
-      // TODO: connect to backend / CRM / email service.
-      // No backend exists yet — confirm on the client only.
-      setSubmitted(true);
+    // Submit through Web3Forms — the email is delivered to the inbox that
+    // verified WEB3FORMS_ACCESS_KEY (filip@twincaps.eu).
+    setStatus("submitting");
+    try {
+      const res = await fetch(WEB3FORMS_ENDPOINT, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: data,
+      });
+      const result = await res.json().catch(() => null);
+      if (res.ok && result?.success) {
+        setStatus("success");
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
     }
   }
 
-  if (submitted) {
+  if (status === "success") {
     return (
       <div
         role="status"
@@ -74,7 +96,7 @@ export default function ContactForm() {
         </a>
         <button
           type="button"
-          onClick={() => setSubmitted(false)}
+          onClick={() => setStatus("idle")}
           className="mt-8 text-sm text-mist underline-offset-4 transition-colors hover:text-cream hover:underline"
         >
           Send another request
@@ -85,6 +107,25 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
+      {/* Web3Forms configuration — access key, email subject and sender name. */}
+      <input type="hidden" name="access_key" value={WEB3FORMS_ACCESS_KEY} />
+      <input
+        type="hidden"
+        name="subject"
+        value="New TwinCaps B2B offer request"
+      />
+      <input type="hidden" name="from_name" value="TwinCaps Website" />
+      {/* Honeypot — bots fill this hidden field; Web3Forms then rejects them. */}
+      <input
+        type="checkbox"
+        name="botcheck"
+        className="hidden"
+        style={{ display: "none" }}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+      />
+
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="name" className={labelClass}>
@@ -260,11 +301,46 @@ export default function ContactForm() {
         </div>
       </div>
 
+      {status === "error" && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="flex items-start gap-3 rounded-xl border border-[#b4231b]/30 bg-[#b4231b]/5 px-4 py-3.5 text-sm text-[#b4231b]"
+        >
+          <AlertCircle
+            className="mt-0.5 h-4 w-4 shrink-0"
+            strokeWidth={1.75}
+            aria-hidden="true"
+          />
+          <span>
+            Something went wrong sending your request. Please try again, or
+            email us directly at{" "}
+            <a href={CONTACT_EMAIL_HREF} className="font-medium underline">
+              {CONTACT_EMAIL}
+            </a>
+            .
+          </span>
+        </div>
+      )}
+
       <button
         type="submit"
-        className="inline-flex w-full items-center justify-center rounded-full bg-cream px-7 py-3.5 text-sm font-medium tracking-tight text-night transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#37322b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne sm:w-auto"
+        disabled={status === "submitting"}
+        aria-busy={status === "submitting"}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-cream px-7 py-3.5 text-sm font-medium tracking-tight text-night transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#37322b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne disabled:pointer-events-none disabled:opacity-60 sm:w-auto"
       >
-        Request B2B Offer
+        {status === "submitting" ? (
+          <>
+            <Loader2
+              className="h-4 w-4 animate-spin"
+              strokeWidth={1.75}
+              aria-hidden="true"
+            />
+            Sending…
+          </>
+        ) : (
+          "Request B2B Offer"
+        )}
       </button>
     </form>
   );

@@ -13,6 +13,13 @@ const SPECS = [
 ];
 
 /**
+ * Hero opening: `false` shows the static image (/twincaps-premium-01.png),
+ * `true` plays the video. Flip this back to `true` to restore the video —
+ * the <video> element and its fallback are both kept intact below.
+ */
+const HERO_VIDEO_ENABLED = false;
+
+/**
  * White-first homepage opening. The TwinCaps2 product film plays full-width
  * directly under the header as a cinematic opening — no headline, copy or CTA
  * over it. The headline, subheadline, spec line and CTAs follow in a calm
@@ -45,7 +52,7 @@ export default function HeroReveal() {
           desktop fills the viewport for a true opening shot. */}
       <div className="pt-[72px]">
         <div className="relative aspect-video w-full overflow-hidden bg-coal lg:aspect-auto lg:h-[calc(100vh_-_72px)]">
-          {!videoFailed ? (
+          {HERO_VIDEO_ENABLED && !videoFailed ? (
             <video
               className="absolute inset-0 h-full w-full object-cover"
               autoPlay
